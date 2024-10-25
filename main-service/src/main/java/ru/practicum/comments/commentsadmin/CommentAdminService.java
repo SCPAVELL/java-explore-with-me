@@ -18,26 +18,28 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 @Slf4j
 public class CommentAdminService {
-    private final CommentRepository commentRepository;
-    private final UserRepository userRepository;
-    private final CommentMapper commentMapper;
+	private final CommentRepository commentRepository;
+	private final UserRepository userRepository;
+	private final CommentMapper commentMapper;
 
-    public List<CommentDto> getCommentsByUser(Long userId) {
-        User user = userRepository.findById(userId)
-                .orElseThrow(() -> new NotFoundException("User with id " + userId + " not found."));
-        return commentRepository.getCommentsByUser(user).stream()
-                .map(commentMapper::toCommentDto)
-                .collect(Collectors.toList());
-    }
+	public List<CommentDto> getCommentsByUser(Long userId) {
+		User user = userRepository.findById(userId)
+				.orElseThrow(() -> new NotFoundException("User with id " + userId + " not found."));
+		return commentRepository.getCommentsByUser(user).stream().map(commentMapper::toCommentDto)
+				.collect(Collectors.toList());
+	}
 
-    public void deleteComment(Long commentId) {
-        commentRepository.deleteById(commentId);
-    }
+	public void deleteComment(Long commentId) {
+		if (!commentRepository.existsById(commentId)) {
+			throw new NotFoundException("Comment with id " + commentId + " not found.");
+		}
+		commentRepository.deleteById(commentId);
+	}
 
-    public CommentDto patchComment(Long commentId, CommentDto commentDto) {
-        Comment comment = commentRepository.findById(commentId)
-                .orElseThrow(() -> new NotFoundException("Comment with id " + commentId + " not found."));
-        comment.setText(commentDto.getText());
-        return commentMapper.toCommentDto(commentRepository.save(comment));
-    }
+	public CommentDto patchComment(Long commentId, CommentDto commentDto) {
+		Comment comment = commentRepository.findById(commentId)
+				.orElseThrow(() -> new NotFoundException("Comment with id " + commentId + " not found."));
+		comment.setText(commentDto.getText());
+		return commentMapper.toCommentDto(commentRepository.save(comment));
+	}
 }
